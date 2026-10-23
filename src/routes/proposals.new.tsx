@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useRef, useState } from "react";
-import { UploadCloud, FileText, X, Sparkles } from "lucide-react";
+import { UploadCloud, FileText, X, Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader, PageBody, Section } from "@/components/app/ui";
-import { api, isBackendConnected } from "@/lib/api";
+import { api, isBackendConnected, saveLiveAnalysis } from "@/lib/api";
 
 export const Route = createFileRoute("/proposals/new")({
   head: () => ({
@@ -35,6 +35,7 @@ function CreateProposal() {
   const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<{ client?: string; title?: string; input?: string }>({});
   const [busy, setBusy] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const addFiles = (list: FileList | null) => {
     if (!list) return;
@@ -59,19 +60,24 @@ function CreateProposal() {
     if (Object.keys(errs).length) return;
 
     if (!isBackendConnected()) {
-      toast.info("AI analysis isn't connected yet", { description: "Opening the sample analysis so you can preview the workflow." });
-      navigate({ to: "/proposals/$id/analysis", params: { id: "BB-2026-041" } });
+      setApiError("The backend isn't configured. Set VITE_API_BASE_URL to your FastAPI server's public URL.");
       return;
     }
+    if (!text.trim()) {
+      setErrors({ input: "The live backend analyzes pasted text — please paste the requirements." });
+      return;
+    }
+    setApiError(null);
     setBusy(true);
     try {
-      const fd = new FormData();
-      fd.append("client", client); fd.append("title", title); fd.append("doc_type", docType); fd.append("requirements", text);
-      files.forEach((f) => fd.append("files", f));
-      const { proposalId } = await api.analyzeRequirements(fd);
-      navigate({ to: "/proposals/$id/analysis", params: { id: proposalId } });
+      const result = await api.analyzeRequirements({ client_name: client.trim(), project_title: title.trim(), requirements: text.trim() });
+      const id = `live-${Date.now()}`;
+      saveLiveAnalysis(id, result);
+      navigate({ to: "/proposals/$id/analysis", params: { id } });
     } catch (err) {
-      toast.error((err as Error).message);
+      const msg = (err as Error).message;
+      setApiError(msg);
+      toast.error("Analysis failed", { description: msg });
     } finally { setBusy(false); }
   };
 
@@ -136,9 +142,15 @@ function CreateProposal() {
               </ol>
             </Section>
             {!isBackendConnected() && (
-              <p className="rounded-md bg-warning-soft px-4 py-3 text-xs text-warning">AI backend not connected. Submitting will open the sample analysis instead of analyzing your input.</p>
+              <p className="rounded-md bg-warning-soft px-4 py-3 text-xs text-warning">AI backend not configured. Set VITE_API_BASE_URL to enable analysis.</p>
             )}
-            <Button type="submit" size="lg" className="w-full" disabled={busy}><Sparkles className="h-4 w-4" />{busy ? "Analyzing…" : "Analyze Requirements"}</Button>
+            {apiError && (
+              <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive">{apiError}</p>
+            )}
+            <Button type="submit" size="lg" className="w-full" disabled={busy}>
+              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {busy ? "Analyzing requirements…" : "Analyze Requirements"}
+            </Button>
           </aside>
         </form>
       </PageBody>
