@@ -25,9 +25,9 @@ export const Route = createFileRoute("/proposals/$id/editor")({
 
 function Editor() {
   const { id } = Route.useParams();
-  const p = proposals.find((x) => x.id === id) ?? proposals[0];
+  const p = proposals.find((x) => x.id === id) ?? proposals[0]!;
   const [sections, setSections] = useState(proposalSections);
-  const [active, setActive] = useState(sections[0].id);
+  const [active, setActive] = useState(sections[0]!.id);
   const [preview, setPreview] = useState(false);
   const [regen, setRegen] = useState(false);
   const current = sections.find((s) => s.id === active)!;
@@ -59,7 +59,7 @@ function Editor() {
         <nav className="rounded-lg border bg-card p-2 lg:sticky lg:top-6 lg:self-start">
           <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Sections</div>
           {sections.map((s, i) => {
-            const edited = s.content !== proposalSections[i].content;
+            const edited = s.content !== proposalSections[i]?.content;
             return (
               <button key={s.id} onClick={() => setActive(s.id)} className={cn(
                 "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm",

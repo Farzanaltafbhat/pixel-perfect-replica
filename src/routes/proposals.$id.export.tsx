@@ -22,7 +22,7 @@ export const Route = createFileRoute("/proposals/$id/export")({
 
 function ExportPage() {
   const { id } = Route.useParams();
-  const p = proposals.find((x) => x.id === id) ?? proposals[0];
+  const p = proposals.find((x) => x.id === id) ?? proposals[0]!;
   const [busy, setBusy] = useState<null | "docx" | "pdf">(null);
   const connected = isBackendConnected();
 

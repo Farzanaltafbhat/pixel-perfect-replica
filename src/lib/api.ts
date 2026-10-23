@@ -4,7 +4,7 @@
  * generation and storage) go through this module. API keys never live here —
  * the backend holds them.
  */
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL as string | undefined;
+export const API_BASE_URL = import.meta.env["VITE_API_BASE_URL"] as string | undefined;
 
 export const isBackendConnected = () => Boolean(API_BASE_URL);
 

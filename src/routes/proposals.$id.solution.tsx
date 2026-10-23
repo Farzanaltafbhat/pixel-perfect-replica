@@ -20,7 +20,7 @@ const lvl = { High: "teal", Medium: "default", Low: "default" } as const;
 
 function Solution() {
   const { id } = Route.useParams();
-  const p = proposals.find((x) => x.id === id) ?? proposals[0];
+  const p = proposals.find((x) => x.id === id) ?? proposals[0]!;
   return (
     <>
       <PageHeader eyebrow={`${p.client} · ${p.docType}`} title="Solution Recommendations" description={p.title}

@@ -21,7 +21,7 @@ const intTone = { Confirmed: "success", Assumed: "warning", Unclear: "danger" } 
 
 function Analysis() {
   const { id } = Route.useParams();
-  const p = proposals.find((x) => x.id === id) ?? proposals[0];
+  const p = proposals.find((x) => x.id === id) ?? proposals[0]!;
   return (
     <>
       <PageHeader eyebrow={`${p.client} · ${p.docType}`} title="Requirements Analysis" description={p.title}
