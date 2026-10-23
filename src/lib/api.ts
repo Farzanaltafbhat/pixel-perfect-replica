@@ -4,7 +4,10 @@
  * generation and storage) go through this module. API keys never live here —
  * the backend holds them.
  */
-export const API_BASE_URL = (import.meta.env["VITE_API_BASE_URL"] as string | undefined)?.replace(/\/+$/, "") || undefined;
+import { API_BASE_URL } from "@/lib/config";
+
+// Preserve the existing import boundary for pages using this public setting.
+export { API_BASE_URL } from "@/lib/config";
 
 export const isBackendConnected = () => Boolean(API_BASE_URL);
 
