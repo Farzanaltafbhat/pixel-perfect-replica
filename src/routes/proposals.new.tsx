@@ -33,7 +33,7 @@ function CreateProposal() {
   const [docType, setDocType] = useState("auto");
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<{ client?: string; title?: string; input?: string }>({});
   const [busy, setBusy] = useState(false);
 
   const addFiles = (list: FileList | null) => {
@@ -50,7 +50,7 @@ function CreateProposal() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const errs: Record<string, string> = {};
+    const errs: { client?: string; title?: string; input?: string } = {};
     if (!client.trim()) errs.client = "Client name is required";
     if (!title.trim()) errs.title = "Project title is required";
     if (!text.trim() && files.length === 0) errs.input = "Paste requirements or upload at least one document";
@@ -146,7 +146,7 @@ function CreateProposal() {
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+function Field({ label, error, children }: { label: string; error?: string | undefined; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
