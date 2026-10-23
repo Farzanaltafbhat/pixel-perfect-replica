@@ -10,33 +10,141 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CatalogueRouteImport } from './routes/catalogue'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProposalsIndexRouteImport } from './routes/proposals.index'
+import { Route as ProposalsNewRouteImport } from './routes/proposals.new'
+import { Route as ProposalsIdAnalysisRouteImport } from './routes/proposals.$id.analysis'
+import { Route as ProposalsIdEditorRouteImport } from './routes/proposals.$id.editor'
+import { Route as ProposalsIdExportRouteImport } from './routes/proposals.$id.export'
+import { Route as ProposalsIdSolutionRouteImport } from './routes/proposals.$id.solution'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CatalogueRoute = CatalogueRouteImport.update({
+  id: '/catalogue',
+  path: '/catalogue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalsIndexRoute = ProposalsIndexRouteImport.update({
+  id: '/proposals/',
+  path: '/proposals/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalsNewRoute = ProposalsNewRouteImport.update({
+  id: '/proposals/new',
+  path: '/proposals/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalsIdAnalysisRoute = ProposalsIdAnalysisRouteImport.update({
+  id: '/proposals/$id/analysis',
+  path: '/proposals/$id/analysis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalsIdEditorRoute = ProposalsIdEditorRouteImport.update({
+  id: '/proposals/$id/editor',
+  path: '/proposals/$id/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalsIdExportRoute = ProposalsIdExportRouteImport.update({
+  id: '/proposals/$id/export',
+  path: '/proposals/$id/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProposalsIdSolutionRoute = ProposalsIdSolutionRouteImport.update({
+  id: '/proposals/$id/solution',
+  path: '/proposals/$id/solution',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/catalogue': typeof CatalogueRoute
+  '/settings': typeof SettingsRoute
+  '/proposals/new': typeof ProposalsNewRoute
+  '/proposals/': typeof ProposalsIndexRoute
+  '/proposals/$id/analysis': typeof ProposalsIdAnalysisRoute
+  '/proposals/$id/editor': typeof ProposalsIdEditorRoute
+  '/proposals/$id/export': typeof ProposalsIdExportRoute
+  '/proposals/$id/solution': typeof ProposalsIdSolutionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/catalogue': typeof CatalogueRoute
+  '/settings': typeof SettingsRoute
+  '/proposals/new': typeof ProposalsNewRoute
+  '/proposals': typeof ProposalsIndexRoute
+  '/proposals/$id/analysis': typeof ProposalsIdAnalysisRoute
+  '/proposals/$id/editor': typeof ProposalsIdEditorRoute
+  '/proposals/$id/export': typeof ProposalsIdExportRoute
+  '/proposals/$id/solution': typeof ProposalsIdSolutionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/catalogue': typeof CatalogueRoute
+  '/settings': typeof SettingsRoute
+  '/proposals/new': typeof ProposalsNewRoute
+  '/proposals/': typeof ProposalsIndexRoute
+  '/proposals/$id/analysis': typeof ProposalsIdAnalysisRoute
+  '/proposals/$id/editor': typeof ProposalsIdEditorRoute
+  '/proposals/$id/export': typeof ProposalsIdExportRoute
+  '/proposals/$id/solution': typeof ProposalsIdSolutionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/catalogue'
+    | '/settings'
+    | '/proposals/new'
+    | '/proposals/'
+    | '/proposals/$id/analysis'
+    | '/proposals/$id/editor'
+    | '/proposals/$id/export'
+    | '/proposals/$id/solution'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/catalogue'
+    | '/settings'
+    | '/proposals/new'
+    | '/proposals'
+    | '/proposals/$id/analysis'
+    | '/proposals/$id/editor'
+    | '/proposals/$id/export'
+    | '/proposals/$id/solution'
+  id:
+    | '__root__'
+    | '/'
+    | '/catalogue'
+    | '/settings'
+    | '/proposals/new'
+    | '/proposals/'
+    | '/proposals/$id/analysis'
+    | '/proposals/$id/editor'
+    | '/proposals/$id/export'
+    | '/proposals/$id/solution'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CatalogueRoute: typeof CatalogueRoute
+  SettingsRoute: typeof SettingsRoute
+  ProposalsNewRoute: typeof ProposalsNewRoute
+  ProposalsIndexRoute: typeof ProposalsIndexRoute
+  ProposalsIdAnalysisRoute: typeof ProposalsIdAnalysisRoute
+  ProposalsIdEditorRoute: typeof ProposalsIdEditorRoute
+  ProposalsIdExportRoute: typeof ProposalsIdExportRoute
+  ProposalsIdSolutionRoute: typeof ProposalsIdSolutionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +156,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/catalogue': {
+      id: '/catalogue'
+      path: '/catalogue'
+      fullPath: '/catalogue'
+      preLoaderRoute: typeof CatalogueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposals/': {
+      id: '/proposals/'
+      path: '/proposals'
+      fullPath: '/proposals/'
+      preLoaderRoute: typeof ProposalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposals/new': {
+      id: '/proposals/new'
+      path: '/proposals/new'
+      fullPath: '/proposals/new'
+      preLoaderRoute: typeof ProposalsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposals/$id/analysis': {
+      id: '/proposals/$id/analysis'
+      path: '/proposals/$id/analysis'
+      fullPath: '/proposals/$id/analysis'
+      preLoaderRoute: typeof ProposalsIdAnalysisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposals/$id/editor': {
+      id: '/proposals/$id/editor'
+      path: '/proposals/$id/editor'
+      fullPath: '/proposals/$id/editor'
+      preLoaderRoute: typeof ProposalsIdEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposals/$id/export': {
+      id: '/proposals/$id/export'
+      path: '/proposals/$id/export'
+      fullPath: '/proposals/$id/export'
+      preLoaderRoute: typeof ProposalsIdExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposals/$id/solution': {
+      id: '/proposals/$id/solution'
+      path: '/proposals/$id/solution'
+      fullPath: '/proposals/$id/solution'
+      preLoaderRoute: typeof ProposalsIdSolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CatalogueRoute: CatalogueRoute,
+  SettingsRoute: SettingsRoute,
+  ProposalsNewRoute: ProposalsNewRoute,
+  ProposalsIndexRoute: ProposalsIndexRoute,
+  ProposalsIdAnalysisRoute: ProposalsIdAnalysisRoute,
+  ProposalsIdEditorRoute: ProposalsIdEditorRoute,
+  ProposalsIdExportRoute: ProposalsIdExportRoute,
+  ProposalsIdSolutionRoute: ProposalsIdSolutionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
