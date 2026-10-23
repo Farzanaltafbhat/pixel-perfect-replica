@@ -10,5 +10,6 @@
 <!-- LOVABLE:END -->
 
 ## Architecture
-- Sample data lives only in `src/data/sample.ts`; all backend calls go through `src/lib/api.ts` (FastAPI via `VITE_API_BASE_URL`) so the real backend can replace samples without touching pages.
+- Sample data lives only in `src/data/sample.ts`; all backend calls go through `src/lib/api.ts` so the real backend can replace samples without touching pages.
+- Public API configuration lives in `src/lib/config.ts`, with a development default and a Vite build-time `VITE_API_BASE_URL` override, so pages share one URL without using Secrets.
 - API keys (Gemini, n8n, etc.) belong on the backend, never in frontend code.
