@@ -47,16 +47,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export type AnalyzeRequest = { client_name: string; project_title: string; requirements: string };
 
 export type AnalysisResult = {
-  executive_summary: string;
-  business_problem: string;
-  functional_requirements: unknown[];
-  technical_requirements: unknown[];
-  recommended_technologies: unknown[];
-  integrations: unknown[];
-  missing_information: unknown[];
-  clarification_questions: unknown[];
-  proposed_solution: string;
-  risks_and_dependencies: unknown[];
+  executive_summary: unknown;
+  business_problem: unknown;
+  functional_requirements: unknown;
+  technical_requirements: unknown;
+  recommended_technologies: unknown;
+  integrations: unknown;
+  missing_information: unknown;
+  clarification_questions: unknown;
+  proposed_solution: unknown;
+  risks_and_dependencies: unknown;
 };
 
 export type AnalyzeResponse = { client_name: string; project_title: string; analysis: AnalysisResult };
@@ -94,4 +94,10 @@ export function itemText(v: unknown): string {
   if (typeof v === "string" || typeof v === "number") return String(v);
   if (typeof v === "object") return Object.values(v as Record<string, unknown>).map(itemText).filter(Boolean).join(" — ");
   return String(v);
+}
+
+/** Analysis fields can be arrays, a single structured object, or plain text. */
+export function analysisItems(value: unknown): unknown[] {
+  if (value == null || value === "") return [];
+  return Array.isArray(value) ? value : [value];
 }
