@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageHeader, PageBody, Section } from "@/components/app/ui";
 import { proposals, type ProposalStatus } from "@/data/sample";
-import { ProposalTable } from "./index";
+import { ProposalTable } from "@/components/app/ProposalTable";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/proposals/")({

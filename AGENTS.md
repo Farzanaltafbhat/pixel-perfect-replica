@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Architecture
+- Sample data lives only in `src/data/sample.ts`; all backend calls go through `src/lib/api.ts` (FastAPI via `VITE_API_BASE_URL`) so the real backend can replace samples without touching pages.
+- API keys (Gemini, n8n, etc.) belong on the backend, never in frontend code.
