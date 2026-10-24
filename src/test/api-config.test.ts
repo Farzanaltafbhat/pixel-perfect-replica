@@ -18,7 +18,7 @@ describe("Public API configuration", () => {
   });
 
   it("keeps the existing analysis POST endpoint and payload", async () => {
-    const result = { client_name: "Test client", project_title: "Test project", analysis: {} };
+    const result = { client_name: "Test client", project_title: "Test project", analysis: { executive_summary: "Actual analysis" } };
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => result });
     vi.stubGlobal("fetch", fetchMock);
     const body = { client_name: "Test client", project_title: "Test project", requirements: "Build a secure customer portal with reporting and account management." };
@@ -28,6 +28,7 @@ describe("Public API configuration", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: expect.any(AbortSignal),
     });
   });
 });

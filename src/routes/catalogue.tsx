@@ -7,6 +7,8 @@ import { catalogue } from "@/data/sample";
 export const Route = createFileRoute("/catalogue")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Technology Catalogue · BriskBold" },
       { name: "description", content: "Technologies, platforms and owning departments available to BriskBold IT proposals." },
       { property: "og:title", content: "Technology Catalogue · BriskBold" },

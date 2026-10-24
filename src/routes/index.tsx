@@ -8,6 +8,8 @@ import { proposals } from "@/data/sample";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Dashboard · BriskBold AI Proposal Generator" },
       { name: "description", content: "Overview of proposals, drafts and items awaiting review at BriskBold IT." },
       { property: "og:title", content: "Dashboard · BriskBold AI Proposal Generator" },

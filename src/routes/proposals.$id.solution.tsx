@@ -2,11 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader, PageBody, Section, DataTable, Tag, SampleNotice, ProposalStepper } from "@/components/app/ui";
+import { isLiveId } from "@/lib/api";
+import { useLiveProposal, solutionFields, proposalText } from "@/lib/proposal-state";
+import { LiveProposalNotice, ProposalUnavailable } from "@/components/app/LiveProposalNotice";
 import { proposals, solution } from "@/data/sample";
 
 export const Route = createFileRoute("/proposals/$id/solution")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Solution Recommendations · BriskBold" },
       { name: "description", content: "Recommended architecture, technologies, departments and team for the proposal." },
       { property: "og:title", content: "Solution Recommendations · BriskBold" },
@@ -20,7 +25,9 @@ const lvl = { High: "teal", Medium: "default", Low: "default" } as const;
 
 function Solution() {
   const { id } = Route.useParams();
-  const p = proposals.find((x) => x.id === id) ?? proposals[0]!;
+  if (isLiveId(id)) return <LiveSolution id={id} />;
+  const p = proposals.find((x) => x.id === id);
+  if (!p) return <ProposalUnavailable />;
   return (
     <>
       <PageHeader eyebrow={`${p.client} · ${p.docType}`} title="Solution Recommendations" description={p.title}
@@ -89,4 +96,23 @@ function Solution() {
       </PageBody>
     </>
   );
+}
+
+function LiveSolution({ id }: { id: string }) {
+  const p = useLiveProposal(id);
+  if (!p) return <ProposalUnavailable loading={p === undefined} />;
+  const s = solutionFields(p.response);
+  const fields: [string, unknown][] = [
+    ["Proposed Solution", s.proposed], ["Recommended Architecture", s.architecture],
+    ["Recommended Technologies", s.technologies], ["Tools and Platforms", s.tools],
+    ["Integrations", s.integrations], ["Required Departments", s.departments],
+    ["Team Roles and Responsibilities", s.roles], ["Project Scope", s.scope],
+    ["Deliverables", s.deliverables], ["Risks and Dependencies", s.risks],
+    ["Implementation Considerations", s.considerations],
+  ];
+  return <><PageHeader eyebrow={`${p.client} · ${p.docType}`} title="Solution Recommendations" description={p.title}
+    actions={<Button asChild><Link to="/proposals/$id/editor" params={{ id }}>Build Proposal<ArrowRight className="h-4 w-4" /></Link></Button>} />
+    <ProposalStepper id={id} current="solution" /><PageBody><LiveProposalNotice />
+      {fields.map(([title, value]) => <Section key={title} title={title}><p className="whitespace-pre-line text-sm leading-relaxed">{proposalText(value)}</p></Section>)}
+    </PageBody></>;
 }

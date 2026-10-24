@@ -23,30 +23,34 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+const TIMEOUT_MS = 90000;
+
+async function fetchResponse(path: string, init?: RequestInit): Promise<Response> {
   if (!API_BASE_URL) throw new BackendNotConnectedError();
-  let res: Response;
+  try { new URL(API_BASE_URL); } catch { throw new ApiError("The backend URL is invalid. Check the frontend API configuration."); }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    res = await fetch(`${API_BASE_URL}${path}`, init);
-  } catch {
-    throw new ApiError(
-      `Could not reach the backend at ${API_BASE_URL}. Check the server is running, publicly reachable (not localhost), and allows this site via CORS.`,
-    );
-  }
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const body = (await res.json()) as { detail?: unknown };
-      detail = typeof body.detail === "string" ? body.detail : body.detail ? JSON.stringify(body.detail) : "";
-    } catch { /* non-JSON body */ }
-    throw new ApiError(`Backend returned ${res.status}${detail ? `: ${detail}` : ""}`, res.status);
-  }
-  return res.json() as Promise<T>;
+    const res = await fetch(`${API_BASE_URL}${path}`, { ...init, signal: controller.signal });
+    if (!res.ok) throw new ApiError(`The backend could not complete the request (${res.status}). Please retry.`, res.status);
+    return res;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    if (controller.signal.aborted) throw new ApiError("The request timed out. Please retry.");
+    throw new ApiError("Could not reach the backend. Check the connection and ensure the server allows this site through CORS.");
+  } finally { clearTimeout(timer); }
 }
 
-export type AnalyzeRequest = { client_name: string; project_title: string; requirements: string };
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetchResponse(path, init);
+  try { return await res.json() as T; }
+  catch { throw new ApiError("The backend returned invalid data. Please retry."); }
+}
+
+export type AnalyzeRequest = { client_name: string; project_title: string; requirements: string; document_type?: string };
 
 export type AnalysisResult = {
+  [key: string]: unknown;
   executive_summary: unknown;
   business_problem: unknown;
   functional_requirements: unknown;
@@ -61,21 +65,36 @@ export type AnalysisResult = {
 
 export type AnalyzeResponse = { client_name: string; project_title: string; analysis: AnalysisResult };
 
+export function validateAnalysis(value: unknown): AnalyzeResponse {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new ApiError("The backend returned an invalid analysis. Please retry.");
+  const r = value as Record<string, unknown>;
+  if (typeof r.client_name !== "string" || typeof r.project_title !== "string" || !r.analysis || typeof r.analysis !== "object" || Array.isArray(r.analysis) || !Object.keys(r.analysis).length) throw new ApiError("The backend returned an incomplete analysis. Please retry.");
+  return r as AnalyzeResponse;
+}
+
+export type ExportPayload = { id: string; client_name: string; project_title: string; document_type: string; status: string; sections: { id: string; title: string; content: string }[] };
+export type ExportCapabilities = { docx: boolean; pdf: boolean };
+
+export async function validateDocument(blob: Blob, format: "docx" | "pdf"): Promise<Blob> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  const valid = format === "pdf" ? new TextDecoder().decode(bytes.slice(0, 5)) === "%PDF-" : bytes[0] === 80 && bytes[1] === 75 && bytes[2] === 3 && bytes[3] === 4;
+  if (!valid) throw new ApiError("The server did not return a valid document. Please retry.");
+  return blob;
+}
+
 export const api = {
   health: () => request<unknown>("/health"),
-  analyzeRequirements: (body: AnalyzeRequest) =>
-    request<AnalyzeResponse>("/api/analyze-requirements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }),
-  regenerateSection: (proposalId: string, sectionId: string) =>
-    request<{ content: string }>(`/proposals/${proposalId}/sections/${sectionId}/regenerate`, { method: "POST" }),
-  exportDocument: async (proposalId: string, format: "docx" | "pdf") => {
-    if (!API_BASE_URL) throw new BackendNotConnectedError();
-    const res = await fetch(`${API_BASE_URL}/proposals/${proposalId}/export?format=${format}`);
-    if (!res.ok) throw new Error(`Export failed (${res.status})`);
-    return res.blob();
+  analyzeRequirements: async (body: AnalyzeRequest) => validateAnalysis(await request<unknown>("/api/analyze-requirements", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  })),
+  exportCapabilities: async (): Promise<ExportCapabilities> => {
+    const schema = await request<{ paths?: Record<string, { post?: unknown }> }>("/openapi.json");
+    return { docx: Boolean(schema.paths?.["/api/export/docx"]?.post), pdf: Boolean(schema.paths?.["/api/export/pdf"]?.post) };
+  },
+  exportDocument: async (proposal: ExportPayload, format: "docx" | "pdf") => {
+    if (!proposal.sections.length || proposal.sections.some(s => !s.content.trim())) throw new ApiError("Complete the empty proposal sections before exporting.");
+    const res = await fetchResponse(`/api/export/${format}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(proposal) });
+    return validateDocument(await res.blob(), format);
   },
 };
 
