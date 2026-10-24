@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import { ArrowRight, HelpCircle, AlertTriangle, Loader2 } from "lucide-react";
-import { isLiveId, loadLiveAnalysis, itemText, analysisItems, type AnalyzeResponse } from "@/lib/api";
+import { isLiveId, itemText, analysisItems } from "@/lib/api";
+import { useLiveProposal } from "@/lib/proposal-state";
+import { LiveProposalNotice, ProposalUnavailable } from "@/components/app/LiveProposalNotice";
 import { Button } from "@/components/ui/button";
 import { PageHeader, PageBody, Section, DataTable, Tag, SampleNotice, ProposalStepper } from "@/components/app/ui";
 import { analysis, proposals } from "@/data/sample";
@@ -28,15 +29,9 @@ function Analysis() {
 }
 
 function LiveAnalysis({ id }: { id: string }) {
-  const [data, setData] = useState<AnalyzeResponse | null | undefined>(undefined);
-  useEffect(() => { setData(loadLiveAnalysis(id)); }, [id]);
-  if (data === undefined) return <PageBody><div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading analysis…</div></PageBody>;
-  if (data === null) return (
-    <PageBody>
-      <p className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">This analysis is no longer available in this browser session. Please run it again.</p>
-      <Button asChild><Link to="/proposals/new">Create Proposal</Link></Button>
-    </PageBody>
-  );
+  const p = useLiveProposal(id);
+  if (!p) return <ProposalUnavailable loading={p === undefined} />;
+  const data = p.response;
   const a = data.analysis;
   const List = ({ items, icon }: { items: unknown; icon?: React.ReactNode }) => {
     const entries = analysisItems(items);
@@ -46,10 +41,11 @@ function LiveAnalysis({ id }: { id: string }) {
   const technologies = analysisItems(a.recommended_technologies);
   return (
     <>
-      <PageHeader eyebrow={`${data.client_name} · Live analysis`} title="Requirements Analysis" description={data.project_title}
+      <PageHeader eyebrow={`${p.client} · ${p.docType} · Live analysis`} title="Requirements Analysis" description={p.title}
         actions={<Button asChild><Link to="/proposals/$id/solution" params={{ id }}>Continue to Solution<ArrowRight className="h-4 w-4" /></Link></Button>} />
       <ProposalStepper id={id} current="analysis" />
       <PageBody>
+        <LiveProposalNotice />
         <div className="grid gap-6 lg:grid-cols-2">
           <Section title="Executive Summary"><p className="text-sm leading-relaxed">{itemText(a.executive_summary)}</p></Section>
           <Section title="Business Problem"><p className="text-sm leading-relaxed">{itemText(a.business_problem)}</p></Section>
@@ -76,7 +72,8 @@ function LiveAnalysis({ id }: { id: string }) {
 }
 
 function SampleAnalysis({ id }: { id: string }) {
-  const p = proposals.find((x) => x.id === id) ?? proposals[0]!;
+  const p = proposals.find((x) => x.id === id);
+  if (!p) return <ProposalUnavailable />;
   return (
     <>
       <PageHeader eyebrow={`${p.client} · ${p.docType}`} title="Requirements Analysis" description={p.title}

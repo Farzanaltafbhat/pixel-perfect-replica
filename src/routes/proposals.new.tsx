@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageHeader, PageBody, Section } from "@/components/app/ui";
-import { api, isBackendConnected, saveLiveAnalysis } from "@/lib/api";
+import { api, isBackendConnected } from "@/lib/api";
+import { createLiveProposal, saveProposal } from "@/lib/proposal-state";
 
 export const Route = createFileRoute("/proposals/new")({
   head: () => ({
@@ -55,7 +56,7 @@ function CreateProposal() {
     if (!client.trim()) errs.client = "Client name is required";
     if (!title.trim()) errs.title = "Project title is required";
     if (!text.trim() && files.length === 0) errs.input = "Paste requirements or upload at least one document";
-    else if (text.trim() && text.trim().length < 50 && files.length === 0) errs.input = "Requirements should be at least 50 characters";
+    else if (text.trim() && text.trim().length < 50) errs.input = "Requirements should be at least 50 characters";
     setErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -70,9 +71,11 @@ function CreateProposal() {
     setApiError(null);
     setBusy(true);
     try {
-      const result = await api.analyzeRequirements({ client_name: client.trim(), project_title: title.trim(), requirements: text.trim() });
-      const id = `live-${Date.now()}`;
-      saveLiveAnalysis(id, result);
+      const input = { client_name: client.trim(), project_title: title.trim(), document_type: docType, requirements: text.trim() };
+      const result = await api.analyzeRequirements(input);
+      const proposal = createLiveProposal(input, result);
+      saveProposal(proposal);
+      const id = proposal.id;
       navigate({ to: "/proposals/$id/analysis", params: { id } });
     } catch (err) {
       const msg = (err as Error).message;
@@ -106,7 +109,8 @@ function CreateProposal() {
             </Section>
             <Section title="Requirements" description="Paste the requirements text, upload documents, or both.">
               <div className="space-y-4">
-                <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={10} maxLength={50000} placeholder="Paste the RFP scope, requirements or email brief here…" />
+                <p className="text-xs text-muted-foreground">Analysis uses pasted text. PDF/DOCX extraction is not available on the current backend.</p>
+                <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={10} maxLength={30000} placeholder="Paste the RFP scope, requirements or email brief here…" />
                 <div
                   onClick={() => fileRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
@@ -123,7 +127,7 @@ function CreateProposal() {
                     {files.map((f, i) => (
                       <li key={i} className="flex items-center justify-between px-3 py-2 text-sm">
                         <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />{f.name}<span className="text-xs text-muted-foreground">{(f.size / 1024).toFixed(0)} KB</span></span>
-                        <button type="button" onClick={() => setFiles(files.filter((_, j) => j !== i))} aria-label="Remove file"><X className="h-4 w-4 text-muted-foreground" /></button>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => setFiles(files.filter((_, j) => j !== i))} aria-label="Remove file"><X className="h-4 w-4 text-muted-foreground" /></Button>
                       </li>
                     ))}
                   </ul>
@@ -149,7 +153,7 @@ function CreateProposal() {
             )}
             <Button type="submit" size="lg" className="w-full" disabled={busy}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {busy ? "Analyzing requirements…" : "Analyze Requirements"}
+              {busy ? "Analyzing requirements…" : apiError ? "Retry Analysis" : "Analyze Requirements"}
             </Button>
           </aside>
         </form>
