@@ -10,6 +10,8 @@ import { proposals, solution } from "@/data/sample";
 export const Route = createFileRoute("/proposals/$id/solution")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Solution Recommendations · BriskBold" },
       { name: "description", content: "Recommended architecture, technologies, departments and team for the proposal." },
       { property: "og:title", content: "Solution Recommendations · BriskBold" },

@@ -14,6 +14,8 @@ import { createLiveProposal, saveProposal } from "@/lib/proposal-state";
 export const Route = createFileRoute("/proposals/new")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Create Proposal · BriskBold" },
       { name: "description", content: "Upload an RFI, RFP or RFQ and analyze client requirements." },
       { property: "og:title", content: "Create Proposal · BriskBold" },

@@ -8,6 +8,8 @@ import { API_BASE_URL } from "@/lib/api";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Settings · BriskBold" },
       { name: "description", content: "Company profile, integrations and proposal defaults." },
       { property: "og:title", content: "Settings · BriskBold" },
