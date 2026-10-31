@@ -40,45 +40,196 @@ export function proposalText(value: unknown): string {
 export function solutionFields(response: AnalyzeResponse) {
   const a = record(response.analysis);
   const s = record(a.proposed_solution);
-  const choose = (...values: unknown[]) => values.find(v => v != null && v !== "");
+
+  const choose = (...values: unknown[]) =>
+    values.find(
+      (v) =>
+        v !== undefined &&
+        v !== null &&
+        v !== "" &&
+        !(Array.isArray(v) && v.length === 0)
+    );
+
   return {
-    proposed: a.proposed_solution,
-    architecture: choose(a.recommended_architecture, a.technical_architecture, a.architecture, s.architecture, s.components),
+    proposed: choose(s.overview, a.proposed_solution),
+    architecture: choose(
+      a.recommended_architecture,
+      s.components
+    ),
     technologies: a.recommended_technologies,
     tools: a.tools_and_platforms,
     integrations: a.integrations,
-    departments: choose(a.department_allocation, a.required_departments, s.departments),
-    roles: choose(a.team_roles, a.roles_and_responsibilities, s.team_roles),
-    scope: choose(a.project_scope, a.scope, s.scope),
-    deliverables: choose(a.deliverables, s.deliverables),
-    timeline: choose(a.implementation_timeline, a.implementation_phases, s.implementation_phases),
-    commercial: choose(a.commercial_estimates, a.commercial_estimate, a.budget_estimate),
+    departments: a.department_allocation,
+    roles: a.team_roles,
+    scope: a.project_scope,
+    deliverables: a.deliverables,
+    timeline: a.implementation_timeline,
+    commercial: a.commercial_estimate,
     risks: a.risks_and_dependencies,
     assumptions: a.assumptions,
-    considerations: a.implementation_considerations,
+    considerations: s.security,
     outcomes: a.expected_outcomes,
-    next: choose(a.next_steps, a.clarification_questions),
+    next: a.next_steps,
   };
 }
 
-export function buildLiveSections(p: Pick<LiveProposal, "client" | "title" | "docType" | "requirements" | "id" | "response">): ProposalSection[] {
+export function buildLiveSections(
+  p: Pick<
+    LiveProposal,
+    "client" | "title" | "docType" | "requirements" | "id" | "response"
+  >
+): ProposalSection[] {
   const a = p.response.analysis;
   const s = solutionFields(p.response);
-  const section = (id: string, title: string, value: unknown): ProposalSection => ({ id, title, content: proposalText(value) });
+
+  const section = (
+    id: string,
+    title: string,
+    value: unknown
+  ): ProposalSection => ({
+    id,
+    title,
+    content: proposalText(value),
+  });
+
+  const architecture = {
+    overview: a.proposed_solution,
+    architecture_layers: s.architecture,
+    components: record(a.proposed_solution).components,
+    workflow: record(a.proposed_solution).workflow,
+    security: record(a.proposed_solution).security,
+    scalability: record(a.proposed_solution).scalability,
+  };
+
+  const scope = record(s.scope);
+
+  const timeline = record(s.timeline);
+  const commercial = record(s.commercial);
+
+  const risksAndAssumptions = {
+    risks_and_dependencies: s.risks,
+    assumptions: s.assumptions,
+  };
+
   return [
-    section("cover", "Cover Page", `${p.title}\nPrepared for ${p.client}\nPrepared by BriskBold IT\n${p.docType} · Reference ${p.id}\nDraft — not approved`),
-    section("exec", "Executive Summary", a.executive_summary),
-    section("understanding", "Understanding of Requirements", `Original requirements:\n${p.requirements || "Not available for this earlier analysis."}\n\nBusiness problem:\n${proposalText(a.business_problem)}\n\nFunctional requirements:\n${proposalText(a.functional_requirements)}\n\nTechnical requirements:\n${proposalText(a.technical_requirements)}`),
-    section("solution", "Proposed Solution", s.proposed),
-    section("architecture", "Technical Architecture", s.architecture),
-    section("stack", "Technology Stack", s.technologies),
-    section("departments", "Department Allocation", s.departments),
-    section("scope", "Project Scope", s.scope),
-    section("timeline", "Implementation Timeline", s.timeline == null ? undefined : `Proposed only — dates and duration are unconfirmed.\n${proposalText(s.timeline)}`),
-    section("commercial", "Commercial Estimate", s.commercial == null ? undefined : `AI-proposed estimate — unconfirmed, not a quotation.\n${proposalText(s.commercial)}`),
-    section("risks", "Risks and Assumptions", `${proposalText(s.risks)}\n\nAssumptions:\n${proposalText(s.assumptions)}`),
-    section("outcomes", "Expected Outcomes", s.outcomes),
-    section("next", "Next Steps", s.next),
+    section(
+      "cover",
+      "Cover Page",
+      `${p.title}\nPrepared for: ${p.client}\nPrepared by: BriskBold IT\nDocument type: ${p.docType}\nReference: ${p.id}\nStatus: Draft — requires review`
+    ),
+
+    section(
+      "exec",
+      "Executive Summary",
+      a.executive_summary
+    ),
+
+    section(
+      "understanding",
+      "Understanding of Requirements",
+      {
+        original_client_requirements:
+          p.requirements || "Original requirements unavailable.",
+        business_problem: a.business_problem,
+        functional_requirements: a.functional_requirements,
+        technical_requirements: a.technical_requirements,
+        missing_information: a.missing_information,
+      }
+    ),
+
+    section(
+      "solution",
+      "Proposed Solution",
+      s.proposed
+    ),
+
+    section(
+      "architecture",
+      "Technical Architecture",
+      architecture
+    ),
+
+    section(
+      "stack",
+      "Technology Stack",
+      {
+        recommended_technologies: s.technologies,
+        tools_and_platforms: s.tools,
+        integrations: s.integrations,
+      }
+    ),
+
+    section(
+      "departments",
+      "Department Allocation and Team Roles",
+      {
+        departments: s.departments,
+        team_roles: s.roles,
+      }
+    ),
+
+    section(
+      "scope",
+      "Project Scope and Deliverables",
+      {
+        in_scope: scope.in_scope,
+        out_of_scope: scope.out_of_scope,
+        scope_notes: scope.scope_notes,
+        deliverables: s.deliverables,
+      }
+    ),
+
+    section(
+      "timeline",
+      "Implementation Timeline",
+      {
+        status: timeline.status,
+        total_duration: timeline.total_duration,
+        phases: timeline.phases,
+        schedule_assumptions: timeline.schedule_assumptions,
+        notice:
+          "Preliminary estimates only. The schedule must be validated and approved before becoming a commitment.",
+      }
+    ),
+
+    section(
+      "commercial",
+      "Commercial Estimate",
+      {
+        status: commercial.status,
+        currency: commercial.currency,
+        estimated_range: commercial.estimated_range,
+        cost_components: commercial.cost_components,
+        exclusions: commercial.exclusions,
+        pricing_assumptions: commercial.pricing_assumptions,
+        note:
+          commercial.note ||
+          "Pricing is subject to commercial review and approval.",
+      }
+    ),
+
+    section(
+      "risks",
+      "Risks, Dependencies and Assumptions",
+      risksAndAssumptions
+    ),
+
+    section(
+      "outcomes",
+      "Expected Outcomes and KPIs",
+      s.outcomes
+    ),
+
+    section(
+      "next",
+      "Clarification Questions and Next Steps",
+      {
+        clarification_questions: a.clarification_questions,
+        next_steps: s.next,
+        analysis_limitations:
+          record(a.analysis_metadata).limitations,
+      }
+    ),
   ];
 }
 
